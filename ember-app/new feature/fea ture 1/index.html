@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Replan — Adaptive Student Planning with Resilience-First Gamification. Plans change, momentum stays." />
+  <title>Replan — Adaptive Student Planning & Habit Resilience</title>
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Confetti Canvas for Celebrations -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">Replan</span>
+            <span class="brand-motto">Plans change. Momentum stays.</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-screen="today" onclick="switchScreen('today')">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Today</span>
+          <span class="nav-badge" id="todayPendingCount">3</span>
+        </button>
+        <button class="nav-item" data-screen="goals" onclick="switchScreen('goals')">
+          <span class="nav-icon">🎯</span>
+          <span class="nav-label">Goals & Skills</span>
+        </button>
+        <button class="nav-item" data-screen="adapt" onclick="switchScreen('adapt')">
+          <span class="nav-icon">⇄</span>
+          <span class="nav-label">Adapt Log</span>
+          <span class="nav-pill" id="adaptTotalPill">+15 XP</span>
+        </button>
+        <button class="nav-item" data-screen="timer" onclick="switchScreen('timer')">
+          <span class="nav-icon">⏱️</span>
+          <span class="nav-label">Focus Timer</span>
+        </button>
+        <button class="nav-item" data-screen="progress" onclick="switchScreen('progress')">
+          <span class="nav-icon">🏆</span>
+          <span class="nav-label">Badges & Mastery</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <!-- Level Progress Card -->
+        <div class="mini-card level-card" onclick="switchScreen('progress')" title="View level perks">
+          <div class="mini-card-head">
+            <div class="level-indicator">
+              <span class="level-tag">LVL <span id="sbLevelNum">6</span></span>
+              <span class="level-name" id="sbLevelTitle">Adaptive Master</span>
+            </div>
+            <span class="level-xp-text" id="sbXpCount">640 / 1000 XP</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="sbXpBar" style="width: 64%"></div>
+          </div>
+          <div class="mini-card-sub" id="sbXpToNext">360 XP to Level 7</div>
+        </div>
+
+        <!-- Resilience Streak Card -->
+        <div class="mini-card streak-card">
+          <div class="streak-header">
+            <div class="streak-flame-wrapper">
+              <span class="streak-flame">🔥</span>
+              <div class="streak-details">
+                <div class="streak-val" id="sbStreakDays">14 Days</div>
+                <div class="streak-caption">Resilience Streak</div>
+              </div>
+            </div>
+            <span class="streak-status-badge">Protected</span>
+          </div>
+          <p class="streak-explanation">
+            <strong id="sbOnPlanDays">9</strong> on-plan · <strong id="sbAdaptedDays">5</strong> adapted. Both count 100%.
+          </p>
+        </div>
+
+        <!-- Audio & Quick Controls -->
+        <div class="sidebar-footer-controls">
+          <button class="btn-icon" id="soundToggleBtn" onclick="toggleSound()" title="Toggle Audio Effects">
+            <span id="soundIcon">🔊</span>
+          </button>
+          <button class="btn-icon" onclick="exportData()" title="Backup / Export Data">
+            <span>💾</span>
+          </button>
+          <button class="btn-icon" onclick="openResetModal()" title="Reset / Demo Data">
+            <span>↺</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      <!-- TOP NAVIGATION BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">
+            <span>☰</span>
+          </button>
+          <div class="topbar-title-wrapper">
+            <h1 class="topbar-title" id="screenTitle">Today's Quests</h1>
+            <span class="topbar-breadcrumb" id="topbarDate">Sunday, Sep 27</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Capacity Dial Pill -->
+          <button class="capacity-pill-btn" onclick="openCapacityModal()" title="Change today's workload capacity">
+            <span class="capacity-dot" id="capacityDot"></span>
+            <span class="capacity-label" id="topCapacityText">Normal Day</span>
+            <span class="capacity-chevron">▾</span>
+          </button>
+
+          <!-- Today XP Chip -->
+          <div class="xp-chip" title="XP earned today">
+            <span class="xp-chip-icon">⚡</span>
+            <span class="xp-chip-val" id="topXpToday">+0 XP</span>
+          </div>
+
+          <!-- User Profile -->
+          <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">P</div>
+            <div class="user-meta">
+              <span class="user-name" id="userName">Prajodh</span>
+              <span class="user-role">Student & Builder</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- SCREEN WRAPPER -->
+      <div class="content-scroll">
+        <!-- 1. TODAY SCREEN -->
+        <section class="screen active" id="screen-today">
+          <!-- Hero Section -->
+          <div class="hero-banner">
+            <div class="hero-content">
+              <div class="hero-eyebrow">
+                <span class="pill-sparkle">✦</span>
+                <span id="todayGreeting">Good evening, Prajodh</span>
+                <span class="divider-dot">•</span>
+                <span>Level <span id="heroLevelNum">6</span></span>
+                <span class="divider-dot">•</span>
+                <span class="text-flame">🔥 14-day resilience streak</span>
+              </div>
+              <h2 class="hero-title" id="heroHeadline">Plans change. Momentum stays.</h2>
+              <p class="hero-subtitle" id="heroSub">
+                Every action awards XP. If surprise deadlines or fatigue hit, click <strong class="highlight-adapt">Plan Changed</strong> to adapt guilt-free with bonus resilience XP.
+              </p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-secondary" onclick="openCapacityModal()">
+                <span>📅</span>
+                <span>Not a normal day?</span>
+              </button>
+              <button class="btn btn-primary" onclick="openAddQuestModal()">
+                <span>+</span>
+                <span>Add Quest</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper purple">⚡</div>
+              <div class="stat-info">
+                <div class="stat-label">Daily XP Earned</div>
+                <div class="stat-value" id="kpiXpToday">0 <span class="stat-unit">XP</span></div>
+                <div class="stat-hint" id="kpiXpPotential">3 quests worth up to 65 XP</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper orange">🔥</div>
+              <div class="stat-info">
+                <div class="stat-label">Resilience Streak</div>
+                <div class="stat-value" id="kpiStreakDays">14 <span class="stat-unit">Days</span></div>
+                <div class="stat-hint">Complete or adapt 1 quest to extend</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper blue">🛡️</div>
+              <div class="stat-info">
+                <div class="stat-label">Today's Capacity</div>
+                <div class="stat-value" id="kpiCapacity">Normal Day</div>
+                <div class="stat-hint">
+                  <a href="javascript:void(0)" onclick="openCapacityModal()" class="inline-link">Adjust workload mode →</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper green">⏱️</div>
+              <div class="stat-info">
+                <div class="stat-label">Focus Logged</div>
+                <div class="stat-value" id="kpiFocusMins">0 <span class="stat-unit">min</span></div>
+                <div class="stat-hint" id="kpiFocusSessions">0 sessions completed</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quests Header & Actions -->
+          <div class="section-header">
+            <div>
+              <h3 class="section-title">Today's Quests</h3>
+              <p class="section-desc" id="planNote">Sized for a normal day (3 quests · ~55 min)</p>
+            </div>
+            <div class="section-controls">
+              <button class="btn-subtle" onclick="filterQuests('all')" id="filterAllBtn">All</button>
+              <button class="btn-subtle" onclick="filterQuests('skill')" id="filterSkillBtn">Skills</button>
+              <button class="btn-subtle" onclick="filterQuests('academic')" id="filterAcadBtn">Academic</button>
+            </div>
+          </div>
+
+          <!-- Quest List -->
+          <div class="quest-list" id="questList">
+            <!-- Rendered dynamically by app.js -->
+          </div>
+
+          <!-- Streak Calendar & Resilience History Track -->
+          <div class="card streak-track-card">
+            <div class="card-head">
+              <div>
+                <h4 class="card-title">14-Day Consistency Track</h4>
+                <p class="card-desc">Every dot is a day you showed up. Adapted days preserve momentum with zero penalty.</p>
+              </div>
+              <span class="badge-pill green">100% Unbroken</span>
+            </div>
+
+            <div class="streak-timeline-track" id="streakTimelineTrack">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <div class="streak-legend">
+              <span class="legend-item"><span class="legend-dot green"></span> Done on plan</span>
+              <span class="legend-item"><span class="legend-dot purple"></span> Adapted (Shrunk / Moved / Swapped)</span>
+              <span class="legend-item"><span class="legend-dot orange"></span> Rough day protected</span>
+              <span class="legend-item"><span class="legend-dot today"></span> Today</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. GOALS & SKILLS SCREEN -->
+        <section class="screen" id="screen-goals">
+          <div class="hero-banner">
+            <div class="hero-content">
+              <div class="hero-eyebrow">
+                <span>Long-Term Directions</span>
+              </div>
+              <h2 class="hero-title">Goals with Built-In Shock Absorbers</h2>
+              <p class="hero-subtitle">
+                Each goal defines both a <strong>Normal Week</strong> target and an acceptable <strong>Minimum Viable Week</strong>, so crazy exam weeks don't derail your multi-month progress.
+              </p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-primary" onclick="openAddGoalModal()">
+                <span>+</span>
+                <span>Create New Goal</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="goals-grid" id="goalsGrid">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- 3. ADAPT LOG SCREEN -->
+        <section class="screen" id="screen-adapt">
+          <div class="hero-banner">
+            <div class="hero-content">
+              <div class="hero-eyebrow">
+                <span>Resilience Archive</span>
+              </div>
+              <h2 class="hero-title">The Adapt Log</h2>
+              <p class="hero-subtitle">
+                Rigid trackers treat unexpected life events as failures. Replan treats adaptation as a master-level skill. Here is your log of preserved momentum.
+              </p>
+            </div>
+          </div>
+
+          <div class="adapt-dashboard-grid">
+            <div class="card adapt-philosophy-card">
+              <h4 class="card-title">How Adapting Works</h4>
+              <div class="step-flow">
+                <div class="flow-step">
+                  <div class="step-num">1</div>
+                  <div class="step-body">
+                    <strong>Acknowledge reality early</strong>
+                    <p>Unexpected coursework or burnout? Don't wait until midnight to feel guilty. Change the plan in 5 seconds.</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <div class="step-num">2</div>
+                  <div class="step-body">
+                    <strong>Pick the fit that works</strong>
+                    <p><strong>Shrink</strong> to a 5-10 min minimum, <strong>Move</strong> to tomorrow, or <strong>Swap</strong> for light reading.</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <div class="step-num">3</div>
+                  <div class="step-body">
+                    <strong>Earn Resilience XP (+15)</strong>
+                    <p>Full credit for the adjusted action + resilience bonus. No punitive 2× makeup tasks ever.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card adapt-stats-card">
+              <h4 class="card-title">Resilience Overview</h4>
+              <div class="kpi-mini-grid">
+                <div class="kpi-mini-item">
+                  <div class="kpi-mini-num" id="adaptTotalSaved">9</div>
+                  <div class="kpi-mini-label">Streaks Saved</div>
+                </div>
+                <div class="kpi-mini-item">
+                  <div class="kpi-mini-num" id="adaptBonusXpTotal">+135</div>
+                  <div class="kpi-mini-label">Resilience XP Earned</div>
+                </div>
+                <div class="kpi-mini-item">
+                  <div class="kpi-mini-num">100%</div>
+                  <div class="kpi-mini-label">Guilt-Free Ratio</div>
+                </div>
+              </div>
+
+              <div class="adapt-breakdown-box">
+                <div class="breakdown-row">
+                  <span>Shrunk to micro-action</span>
+                  <strong id="adaptShrunkCount">5 times</strong>
+                </div>
+                <div class="breakdown-row">
+                  <span>Moved without guilt</span>
+                  <strong id="adaptMovedCount">3 times</strong>
+                </div>
+                <div class="breakdown-row">
+                  <span>Swapped for lighter step</span>
+                  <strong id="adaptSwappedCount">1 time</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-header" style="margin-top: 28px;">
+            <h3 class="section-title">Timeline of Recorded Adaptations</h3>
+          </div>
+
+          <div class="adapt-history-list" id="adaptHistoryList">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- 4. FOCUS TIMER SCREEN -->
+        <section class="screen" id="screen-timer">
+          <div class="focus-timer-container">
+            <div class="timer-card">
+              <div class="timer-target-selector">
+                <label for="timerQuestSelect" class="timer-label">Focusing on:</label>
+                <select id="timerQuestSelect" class="select-input" onchange="syncTimerTarget()">
+                  <!-- Dynamically populated with active quests -->
+                </select>
+              </div>
+
+              <!-- Circular Progress SVG Timer -->
+              <div class="timer-display-wrapper">
+                <svg class="timer-svg" viewBox="0 0 280 280">
+                  <circle class="timer-circle-bg" cx="140" cy="140" r="120" />
+                  <circle class="timer-circle-progress" id="timerCircleProgress" cx="140" cy="140" r="120" />
+                </svg>
+                <div class="timer-center-content">
+                  <div class="timer-digits" id="timerDigits">20:00</div>
+                  <div class="timer-sublabel" id="timerStatusLabel">Ready to begin</div>
+                </div>
+              </div>
+
+              <!-- Preset Duration Chips -->
+              <div class="timer-presets">
+                <button class="preset-chip" onclick="setTimerDuration(5)">5 min (Rough Day)</button>
+                <button class="preset-chip" onclick="setTimerDuration(15)">15 min (Sprint)</button>
+                <button class="preset-chip active" onclick="setTimerDuration(20)">20 min (Standard)</button>
+                <button class="preset-chip" onclick="setTimerDuration(25)">25 min (Pomodoro)</button>
+              </div>
+
+              <!-- Timer Controls -->
+              <div class="timer-controls">
+                <button class="btn btn-secondary btn-lg" onclick="resetTimer()">Reset</button>
+                <button class="btn btn-primary btn-lg" id="timerPlayBtn" onclick="toggleTimer()">
+                  <span id="timerPlayIcon">▶</span>
+                  <span id="timerPlayText">Start Focus</span>
+                </button>
+              </div>
+
+              <!-- Ambient Sound Toggle -->
+              <div class="timer-sound-row">
+                <label class="switch-label">
+                  <input type="checkbox" id="ambientSoundToggle" onchange="toggleAmbientNoise()" />
+                  <span class="switch-slider"></span>
+                  <span class="switch-text">Gentle focus ambient white noise</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. PROGRESS & BADGES SCREEN -->
+        <section class="screen" id="screen-progress">
+          <div class="hero-banner">
+            <div class="hero-content">
+              <div class="hero-eyebrow">
+                <span>Personal Mastery</span>
+              </div>
+              <h2 class="hero-title">Level & Resilience Badges</h2>
+              <p class="hero-subtitle">
+                Progress here is measured by persistence and smart adjustment—not burnout.
+              </p>
+            </div>
+          </div>
+
+          <!-- Level Progression Card -->
+          <div class="card level-overview-card">
+            <div class="level-overview-head">
+              <div class="level-badge-large">
+                <span class="lvl-num">LVL <span id="progLvlNum">6</span></span>
+                <span class="lvl-title" id="progLvlTitle">Adaptive Master</span>
+              </div>
+              <div class="level-stats-col">
+                <div class="level-xp-big"><span id="progTotalXp">640</span> <span class="xp-sub">Total XP</span></div>
+                <div class="level-xp-needed"><span id="progXpToNext">360 XP</span> to Level 7</div>
+              </div>
+            </div>
+            <div class="progress-bar-track lg">
+              <div class="progress-bar-fill" id="progLvlBar" style="width: 64%"></div>
+            </div>
+            <div class="level-tiers-list">
+              <div class="tier-item done">Lvl 1: Explorer</div>
+              <div class="tier-item done">Lvl 3: Habit Forger</div>
+              <div class="tier-item done">Lvl 5: Resilient Scholar</div>
+              <div class="tier-item current">Lvl 6: Adaptive Master</div>
+              <div class="tier-item">Lvl 7: Focus Alchemist</div>
+              <div class="tier-item">Lvl 10: Unshakable</div>
+            </div>
+          </div>
+
+          <!-- Badges Section -->
+          <div class="section-header" style="margin-top: 30px;">
+            <div>
+              <h3 class="section-title">Milestone Trophies</h3>
+              <p class="section-desc">Unlock badges through consistent action, adaptation, and focus.</p>
+            </div>
+            <span class="badge-counter" id="unlockedBadgesCount">4 / 8 Unlocked</span>
+          </div>
+
+          <div class="badges-grid" id="badgesGrid">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Data Management Box -->
+          <div class="card data-mgmt-card" style="margin-top: 30px;">
+            <div class="card-head">
+              <div>
+                <h4 class="card-title">Local Storage & Portability</h4>
+                <p class="card-desc">Your data stays 100% on your device. You can export a JSON backup at any time or restore anytime.</p>
+              </div>
+            </div>
+            <div class="data-mgmt-actions">
+              <button class="btn btn-secondary" onclick="exportData()">Export Data Backup (JSON)</button>
+              <label class="btn btn-secondary file-upload-btn">
+                Import Backup
+                <input type="file" id="importFileInput" accept=".json" onchange="importData(event)" style="display:none;" />
+              </label>
+              <button class="btn btn-danger-subtle" onclick="openResetModal()">Reset to Sample Data</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. CAPACITY MODAL -->
+  <div class="modal-backdrop" id="capacityModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Workload Dial</span>
+          <h3 class="modal-title">What is your realistic capacity today?</h3>
+          <p class="modal-desc">
+            Resize the plan now <em>before</em> you fall behind. Sizing down preserves your streak and awards full credit.
+          </p>
+        </div>
+        <button class="modal-close-btn" onclick="closeCapacityModal()">×</button>
+      </div>
+
+      <div class="capacity-cards-grid">
+        <div class="capacity-option-card" data-cap="normal" onclick="selectCapacityOption('normal')">
+          <div class="cap-card-head">
+            <span class="cap-emoji">⚡</span>
+            <div class="cap-titles">
+              <strong class="cap-name">Normal Day</strong>
+              <span class="cap-time">3-4 actions · ~55 min</span>
+            </div>
+            <span class="cap-badge green">Standard</span>
+          </div>
+          <p class="cap-desc">Standard schedule. Full energy to tackle normal daily quests.</p>
+        </div>
+
+        <div class="capacity-option-card" data-cap="tight" onclick="selectCapacityOption('tight')">
+          <div class="cap-card-head">
+            <span class="cap-emoji">⏳</span>
+            <div class="cap-titles">
+              <strong class="cap-name">Tight Day</strong>
+              <span class="cap-time">1-2 actions · ~15-20 min</span>
+            </div>
+            <span class="cap-badge blue">Squeezed</span>
+          </div>
+          <p class="cap-desc">Heavy class day, labs, or appointments. We keep only the single highest-impact priority.</p>
+        </div>
+
+        <div class="capacity-option-card" data-cap="rough" onclick="selectCapacityOption('rough')">
+          <div class="cap-card-head">
+            <span class="cap-emoji">🛡️</span>
+            <div class="cap-titles">
+              <strong class="cap-name">Rough Day (Shield Mode)</strong>
+              <span class="cap-time">1 micro check-in · ~5 min</span>
+            </div>
+            <span class="cap-badge orange">Shielded</span>
+          </div>
+          <p class="cap-desc">Sick, exhausted, family emergency, or brutal exam day. Protects your streak with zero guilt.</p>
+        </div>
+      </div>
+
+      <div class="modal-note-box">
+        <span class="note-icon">💡</span>
+        <span>
+          Choosing a smaller capacity never penalizes you. There are no double-catch-up tasks tomorrow.
+        </span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeCapacityModal()">Cancel</button>
+        <button class="btn btn-primary" id="confirmCapacityBtn" disabled onclick="confirmCapacitySelection()">
+          Apply Workload
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PLAN CHANGED / ADAPT MODAL -->
+  <div class="modal-backdrop" id="adaptModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Guilt-Free Resilience</span>
+          <h3 class="modal-title" id="adaptModalQuestTitle">"Practice Unreal Engine" doesn't fit?</h3>
+          <p class="modal-desc">
+            Life intervened. State what happened, then choose the adaptive response that keeps your momentum alive.
+          </p>
+        </div>
+        <button class="modal-close-btn" onclick="closeAdaptModal()">×</button>
+      </div>
+
+      <!-- Step 1: Why did it change? -->
+      <div class="adapt-step-label">1. What came up?</div>
+      <div class="reasons-pill-grid" id="reasonsGrid">
+        <button class="reason-pill" data-reason="Unexpected academic / coursework deadline" onclick="selectReason(this)">
+          📚 Coursework / Exam Crunch
+        </button>
+        <button class="reason-pill" data-reason="Physical health or severe exhaustion" onclick="selectReason(this)">
+          💤 Health or Exhaustion
+        </button>
+        <button class="reason-pill" data-reason="Family or urgent personal responsibility" onclick="selectReason(this)">
+          🏡 Family / Personal Duty
+        </button>
+        <button class="reason-pill" data-reason="Schedule clash or lab overtime" onclick="selectReason(this)">
+          ⏰ Lab / Schedule Conflict
+        </button>
+        <button class="reason-pill" data-reason="Brain fatigue / mental block" onclick="selectReason(this)">
+          🧠 Mental Block / Low Energy
+        </button>
+        <button class="reason-pill" data-reason="Just ran out of daylight" onclick="selectReason(this)">
+          ⏳ Ran Out of Time
+        </button>
+      </div>
+
+      <!-- Step 2: Adaptive Action -->
+      <div class="adapt-step-label" style="margin-top: 18px;">2. Pick your adaptive response:</div>
+      <div class="adapt-options-grid" id="adaptChoicesGrid">
+        <button class="adapt-choice-card" data-fit="shrink" onclick="selectFit(this)">
+          <div class="fit-icon">🤏</div>
+          <div class="fit-info">
+            <div class="fit-title">Shrink it to Micro-Version</div>
+            <div class="fit-desc">Do a 5–10 min micro-session today. Same goal, tiny time commitment.</div>
+          </div>
+          <span class="fit-xp-badge">+15 Resilience XP</span>
+        </button>
+
+        <button class="adapt-choice-card" data-fit="move" onclick="selectFit(this)">
+          <div class="fit-icon">📅</div>
+          <div class="fit-info">
+            <div class="fit-title">Move it to Tomorrow</div>
+            <div class="fit-desc">Clear it off today's mental plate without guilt. Preserves streak integrity.</div>
+          </div>
+          <span class="fit-xp-badge">+15 Resilience XP</span>
+        </button>
+
+        <button class="adapt-choice-card" data-fit="swap" onclick="selectFit(this)">
+          <div class="fit-icon">🔄</div>
+          <div class="fit-info">
+            <div class="fit-title">Swap for a Lighter Step</div>
+            <div class="fit-desc">Replace active creation with low-friction learning (e.g. read/watch 5 min).</div>
+          </div>
+          <span class="fit-xp-badge">+15 Resilience XP</span>
+        </button>
+      </div>
+
+      <div class="modal-note-box highlight-purple">
+        <span class="note-icon">✨</span>
+        <span>
+          Adapting pays <strong>+15 Resilience XP</strong>! Choosing an honest adaptation beats abandoning a rigid habit every single time.
+        </span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAdaptModal()">Cancel</button>
+        <button class="btn btn-primary" id="confirmAdaptBtn" disabled onclick="confirmAdaptSelection()">
+          Apply Adaptation & Earn +15 XP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CREATE GOAL MODAL -->
+  <div class="modal-backdrop" id="goalModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Direction Setting</span>
+          <h3 class="modal-title">Create a Resilient Goal</h3>
+          <p class="modal-desc">
+            Define both your ideal rhythm and your non-negotiable floor.
+          </p>
+        </div>
+        <button class="modal-close-btn" onclick="closeGoalModal()">×</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="goalTitleInput">Goal Title</label>
+        <input type="text" id="goalTitleInput" class="text-input" placeholder="e.g. Learn Unreal Engine Cinematics" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="category-chips-row">
+            <button type="button" class="category-chip active" data-cat="skill" onclick="selectGoalCategory(this)">🛠️ Skill</button>
+            <button type="button" class="category-chip" data-cat="academic" onclick="selectGoalCategory(this)">📚 Academic</button>
+            <button type="button" class="category-chip" data-cat="project" onclick="selectGoalCategory(this)">🚀 Project</button>
+            <button type="button" class="category-chip" data-cat="wellness" onclick="selectGoalCategory(this)">🧘 Wellness</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="goalNormalTarget">Normal Week Cadence</label>
+          <select id="goalNormalTarget" class="select-input">
+            <option value="3 sessions / week">3 sessions / week (~20m each)</option>
+            <option value="4 sessions / week">4 sessions / week</option>
+            <option value="5 sessions / week">5 sessions / week</option>
+            <option value="1 major milestone / week">1 major milestone / week</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="goalMinTarget">Minimum Viable Week (Floor)</label>
+          <select id="goalMinTarget" class="select-input">
+            <option value="1 micro-session (10 min)">1 micro-session (10 min) / week</option>
+            <option value="2 quick check-ins">2 quick check-ins / week</option>
+            <option value="1 milestone review every 2 weeks">1 review every 2 weeks</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeGoalModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateGoal()">Create Goal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ADD QUEST MODAL -->
+  <div class="modal-backdrop" id="addQuestModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <span class="modal-eyebrow">Daily Action</span>
+          <h3 class="modal-title">Add Quest to Today</h3>
+          <p class="modal-desc">Keep actions bite-sized (10–30 min) for sustainable follow-through.</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeAddQuestModal()">×</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="questTitleInput">Quest Title</label>
+        <input type="text" id="questTitleInput" class="text-input" placeholder="e.g. Unreal Engine: Setup Lighting Rig" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="questGoalSelect">Associated Goal</label>
+          <select id="questGoalSelect" class="select-input">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="questMinutesSelect">Target Duration</label>
+          <select id="questMinutesSelect" class="select-input">
+            <option value="10">10 minutes (+15 XP)</option>
+            <option value="15">15 minutes (+20 XP)</option>
+            <option value="20" selected>20 minutes (+25 XP)</option>
+            <option value="30">30 minutes (+35 XP)</option>
+            <option value="45">45 minutes (+50 XP)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddQuestModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddQuest()">Add Quest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LEVEL UP MODAL -->
+  <div class="modal-backdrop" id="levelUpModal">
+    <div class="modal-box celebration-box text-center">
+      <div class="levelup-sparkle">⭐</div>
+      <span class="modal-eyebrow text-gold">Level Up!</span>
+      <h2 class="levelup-title">You Reached Level <span id="modalNewLevel">7</span>!</h2>
+      <div class="levelup-badge-display">
+        <span class="lvl-title-unlocked" id="modalNewLevelTitle">Focus Alchemist</span>
+      </div>
+      <p class="modal-desc">
+        Your consistent follow-through and honest adaptations have forged real habit resilience.
+      </p>
+      <div class="modal-actions center">
+        <button class="btn btn-primary btn-lg" onclick="closeLevelUpModal()">Claim Rewards & Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notification" id="toast">
+    <span class="toast-icon" id="toastIcon">✨</span>
+    <span class="toast-message" id="toastMsg">Action completed!</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

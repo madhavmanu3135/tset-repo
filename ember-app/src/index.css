@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+/* ─── EMBER Design Tokens ─── */
+@theme {
+  --color-ember-50: #fff7ed;
+  --color-ember-100: #ffedd5;
+  --color-ember-200: #fed7aa;
+  --color-ember-300: #fdba74;
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-ember-600: #ea580c;
+  --color-ember-700: #c2410c;
+  --color-ember-800: #9a3412;
+  --color-ember-900: #7c2d12;
+
+  --color-surface-950: #0a0a0f;
+  --color-surface-900: #111118;
+  --color-surface-800: #1a1a24;
+  --color-surface-700: #252532;
+  --color-surface-600: #32324a;
+  --color-surface-500: #52526e;
+  --color-surface-400: #7a7a94;
+  --color-surface-300: #a0a0b4;
+  --color-surface-200: #c8c8d8;
+  --color-surface-100: #e8e8f0;
+
+  --color-hp-green: #22c55e;
+  --color-hp-yellow: #eab308;
+  --color-hp-red: #ef4444;
+
+  --color-vitality-zone: #f97316;
+  --color-vitality-steady: #eab308;
+  --color-vitality-low: #6b7280;
+  --color-vitality-empty: #ef4444;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ─── Base Styles ─── */
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-surface-950 text-surface-200 font-sans antialiased;
+  min-height: 100vh;
+  min-height: 100dvh; /* dynamic viewport height for mobile */
+  -webkit-tap-highlight-color: transparent; /* remove tap highlight on mobile */
+}
+
+/* ─── Glow Utilities ─── */
+.ember-glow-zone {
+  filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.6))
+    drop-shadow(0 0 40px rgba(249, 115, 22, 0.3))
+    drop-shadow(0 0 60px rgba(249, 115, 22, 0.15));
+}
+
+.ember-glow-steady {
+  filter: drop-shadow(0 0 14px rgba(234, 179, 8, 0.5))
+    drop-shadow(0 0 28px rgba(234, 179, 8, 0.2));
+}
+
+.ember-glow-low {
+  filter: drop-shadow(0 0 8px rgba(107, 114, 128, 0.4));
+}
+
+.ember-glow-empty {
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.3));
+  opacity: 0.6;
+}
+
+/* ─── Card Glass ─── */
+.card-glass {
+  @apply bg-surface-800/60 backdrop-blur-md border border-surface-700/50 rounded-2xl;
+}
+
+/* ─── Animations ─── */
+@keyframes particle-burst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 35px rgba(249, 115, 22, 0.7));
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes celebration-burst {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-celebration {
+  animation: celebration-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-fade-in,
+  .animate-pulse-glow,
+  .animate-celebration,
+  .animate-shake,
+  .animate-float {
+    animation: none !important;
+  }
+
+  .hp-bar-fill {
+    transition: none !important;
+  }
+
+  .den-item {
+    transition: none !important;
+  }
+
+  .den-item:hover {
+    transform: none !important;
+  }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-surface-700 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-600;
+}
+
+/* ─── Boss HP Bar ─── */
+.hp-bar-fill {
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Focus ring ─── */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-ember-500 rounded;
+}
+
+/* ─── Momentum counter ─── */
+@keyframes momentum-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.momentum-pop {
+  animation: momentum-pop 0.3s ease-out;
+}
+
+/* ─── Den item hover ─── */
+.den-item {
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.den-item:hover {
+  transform: scale(1.1) translateY(-4px);
+  filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.3));
+}
+
+/* ─── Mobile-specific ─── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Prevent pull-to-refresh on mobile when in focus session */
+.focus-session-active {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+/* ─── Select dropdown styling (dark mode) ─── */
+select {
+  appearance: auto;
+}
